@@ -1,0 +1,44 @@
+[
+  {
+    "name": "Schmidt Steel GmbH",
+    "products": ["Steel Tube DIN 2391", "Steel Pipe DIN 2448", "Steel Round Bar", "Steel Hollow Section"],
+    "on_time_rate": 0.98,
+    "quality_score": 9.5,
+    "negotiation_history": "Excellent partner for 8+ years. Typically offers 5-8% volume discounts for orders over 5000 units. Responds well to long-term contracts (12+ months) with improved pricing and priority scheduling. Last negotiation in Q3 2024 resulted in 7.5% discount on annual steel tube contract."
+  },
+  {
+    "name": "Hoffmann Steel Industries",
+    "products": ["Steel Pipe DIN 2448", "Steel Rectangular Tube", "Steel Pipe Large Diameter", "Steel Hollow Section"],
+    "on_time_rate": 0.94,
+    "quality_score": 9.0,
+    "negotiation_history": "Reliable supplier for 5 years. Open to negotiations on lead time reductions for premium pricing (+3-5%). Offers standard 4-6% discounts for quarterly commitments. Previously accepted 6-month exclusivity agreement in exchange for 9% price reduction and 5-day lead time guarantee."
+  },
+  {
+    "name": "Stahlwerk Munich AG",
+    "products": ["Steel Tube DIN 2391", "Steel Pipe DIN 2448", "Steel Round Bar", "Steel Rectangular Tube"],
+    "on_time_rate": 0.89,
+    "quality_score": 8.3,
+    "negotiation_history": "Mid-tier supplier, moderate negotiating flexibility. Typically requires MOQ of 1000 units but flexible on delivery schedules. Offers 3-5% discounts for upfront payment (Net 15 instead of Net 30). Recent negotiation achieved 4.5% discount with staged delivery terms."
+  },
+  {
+    "name": "Mueller Industries KG",
+    "products": ["Steel Pipe DIN 2448", "Steel Tube DIN 2391", "Aluminum Tube 6061", "Brass Round Bar"],
+    "on_time_rate": 0.45,
+    "quality_score": 7.2,
+    "negotiation_history": "Problematic supplier with frequent delays. Low prices (typically 15-20% below market) but high risk. Quality issues reported in 2023-2024. Multiple failed delivery commitments. Not recommended for critical orders. Previous negotiations unsuccessful - supplier unable to meet improved lead time commitments despite premium offers."
+  },
+  {
+    "name": "AlphaMetals Distribution",
+    "products": ["Aluminum Profile 6082-T6", "Aluminum Tube 6061", "Aluminum Sheet 6082", "Aluminum Round Bar 6061", "Aluminum Plate 6061"],
+    "on_time_rate": 0.91,
+    "quality_score": 8.8,
+    "negotiation_history": "Specialized aluminum supplier, competitive on pricing for bulk orders. Offers 6-10% discounts on orders exceeding 10,000 units. Willing to negotiate on lead times with advance notice (3+ weeks). Last negotiation secured 8% discount plus expedited shipping for a 9-month supply agreement."
+  },
+  {
+    "name": "European Brass & Copper Co.",
+    "products": ["Brass Round Bar", "Brass Tube", "Brass Flat Bar", "Brass Wire", "Brass Hexagonal Bar", "Brass Sheet"],
+    "on_time_rate": 0.87,
+    "quality_score": 8.5,
+    "negotiation_history": "Niche supplier for brass products with fair pricing. Flexible on payment terms - accepts Net 45-60 for established customers. Offers 4-7% volume discounts but requires quarterly forecasts. Quality consistent but lead times variable (7-14 days standard). Recent negotiation achieved better pricing (5.5% discount) in exchange for minimum quarterly order guarantee."
+  }
+]

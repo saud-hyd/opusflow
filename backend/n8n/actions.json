@@ -1,0 +1,294 @@
+{
+  "name": "Parallel Actions - Order Coordination",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "parallel-actions",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook: Order Confirmed",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 460],
+      "webhookId": "parallel-actions"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"processing\", \"message\": \"Order coordination started\" } }}"
+      },
+      "id": "respond-immediately",
+      "name": "Respond Immediately",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [470, 460]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "sales_msg",
+              "name": "sales_message",
+              "type": "string",
+              "value": "✅ *Order Confirmed*\\n• Order: {{ $json.body.order_id }}\\n• Customer: {{ $json.body.customer_company }}\\n• Value: ${{ $json.body.total }}\\n• Delivery: {{ $json.body.delivery_date }}"
+            },
+            {
+              "id": "procurement_msg",
+              "name": "procurement_message",
+              "type": "string",
+              "value": "🤝 *Supplier Order*\\n• PO: {{ $json.body.po_id || 'N/A' }}\\n• Supplier: {{ $json.body.supplier || 'Internal' }}\\n• Cost: ${{ $json.body.supplier_cost || 'N/A' }}\\n• Linked to: {{ $json.body.order_id }}"
+            },
+            {
+              "id": "inventory_msg",
+              "name": "inventory_message",
+              "type": "string",
+              "value": "📦 *Inventory Update*\\n• Order: {{ $json.body.order_id }}\\n• Action: Reserve stock\\n• Items: {{ $json.body.items.length }} SKU(s)\\n• Source: {{ $json.body.source }}"
+            },
+            {
+              "id": "production_msg",
+              "name": "production_message",
+              "type": "string",
+              "value": "🏭 *Production Schedule*\\n• Order: {{ $json.body.order_id }}\\n• Start: {{ $json.body.production_start || 'TBD' }}\\n• Deadline: {{ $json.body.delivery_date }}\\n• Priority: Normal"
+            },
+            {
+              "id": "logistics_msg",
+              "name": "logistics_message",
+              "type": "string",
+              "value": "🚚 *Delivery Planning*\\n• Order: {{ $json.body.order_id }}\\n• Destination: {{ $json.body.delivery_location || 'N/A' }}\\n• Date: {{ $json.body.delivery_date }}\\n• Prepare dispatch"
+            },
+            {
+              "id": "finance_msg",
+              "name": "finance_message",
+              "type": "string",
+              "value": "💰 *Invoice Ready*\\n• Order: {{ $json.body.order_id }}\\n• Customer: {{ $json.body.customer_company }}\\n• Amount: ${{ $json.body.total }}\\n• Terms: Net 30"
+            }
+          ]
+        }
+      },
+      "id": "prepare-messages",
+      "name": "Prepare All Messages",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [690, 460]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"text\": \"{{ $json.sales_message }}\" }",
+        "options": {}
+      },
+      "id": "slack-sales",
+      "name": "Slack: Sales",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [910, 140]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"text\": \"{{ $json.procurement_message }}\" }",
+        "options": {}
+      },
+      "id": "slack-procurement",
+      "name": "Slack: Procurement",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [910, 260]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"text\": \"{{ $json.inventory_message }}\" }",
+        "options": {}
+      },
+      "id": "slack-inventory",
+      "name": "Slack: Inventory",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [910, 380]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"text\": \"{{ $json.production_message }}\" }",
+        "options": {}
+      },
+      "id": "slack-production",
+      "name": "Slack: Production",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [910, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"text\": \"{{ $json.logistics_message }}\" }",
+        "options": {}
+      },
+      "id": "slack-logistics",
+      "name": "Slack: Logistics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [910, 620]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"text\": \"{{ $json.finance_message }}\" }",
+        "options": {}
+      },
+      "id": "slack-finance",
+      "name": "Slack: Finance",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [910, 740]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.BACKEND_URL }}/api/erp-sync",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.body }}",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "id": "erp-sync",
+      "name": "ERP Sync",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [910, 860]
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "email": "={{ $json.body.customer_email }}",
+        "subject": "Order Confirmation - {{ $json.body.order_id }}",
+        "message": "Dear {{ $json.body.customer_company }},\\n\\nYour order has been confirmed.\\n\\nOrder ID: {{ $json.body.order_id }}\\nTotal: ${{ $json.body.total }}\\nDelivery Date: {{ $json.body.delivery_date }}\\n\\nThank you for your order!\\n\\nBest regards,\\nOpusFlow Team",
+        "options": {}
+      },
+      "id": "send-customer-email",
+      "name": "Email: Customer",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [910, 980],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook: Order Confirmed": {
+      "main": [
+        [
+          {
+            "node": "Respond Immediately",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond Immediately": {
+      "main": [
+        [
+          {
+            "node": "Prepare All Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare All Messages": {
+      "main": [
+        [
+          {
+            "node": "Slack: Sales",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Slack: Procurement",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Slack: Inventory",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Slack: Production",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Slack: Logistics",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Slack: Finance",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "ERP Sync",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Email: Customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "coordination",
+      "id": "parallel-processing"
+    },
+    {
+      "name": "opusflow",
+      "id": "opusflow-core"
+    }
+  ],
+  "pinData": {},
+  "versionId": "1"
+}

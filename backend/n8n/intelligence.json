@@ -1,0 +1,265 @@
+{
+  "name": "Intelligence Scheduler - Daily Analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 2 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule: Daily 2 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger (Demo)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [250, 460]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "run_type",
+              "name": "run_type",
+              "type": "string",
+              "value": "={{ $node.name === 'Manual Trigger (Demo)' ? 'manual' : 'scheduled' }}"
+            },
+            {
+              "id": "timestamp",
+              "name": "started_at",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      },
+      "id": "merge-triggers",
+      "name": "Merge Triggers",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [470, 380]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.BACKEND_URL }}/api/run-intelligence",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"time_range_days\": 180 }",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "run-intelligence",
+      "name": "Run Intelligence Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [690, 380]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.critical_risks }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "check-success",
+      "name": "Analysis Successful?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [910, 380]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "slack_message",
+              "name": "slack_message",
+              "type": "string",
+              "value": "🧠 *Daily Intelligence Report*\\n\\n📊 *Summary*\\n• Critical Risks: {{ $json.critical_risks.length }}\\n• Cost Opportunities: {{ $json.cost_opportunities.length }}\\n• Suppliers Analyzed: {{ $json.supplier_rankings.length }}\\n\\n🚨 *Top Risk*\\n{{ $json.critical_risks[0]?.title || 'No critical risks' }}\\n{{ $json.critical_risks[0]?.description || '' }}\\n\\n💡 *Top Opportunity*\\n{{ $json.cost_opportunities[0]?.title || 'No opportunities found' }}\\n{{ $json.cost_opportunities[0]?.description || '' }}\\n\\n📈 View detailed report in dashboard\\n_Generated at {{ $json.generated_at }}_"
+            }
+          ]
+        }
+      },
+      "id": "format-success-message",
+      "name": "Format Success Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1130, 280]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"text\": \"{{ $json.slack_message }}\" }",
+        "options": {}
+      },
+      "id": "notify-success",
+      "name": "Slack: Report Ready",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1350, 280]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "error_message",
+              "name": "slack_message",
+              "type": "string",
+              "value": "⚠️ *Intelligence Analysis Failed*\\n\\nThe daily intelligence report could not be generated.\\n\\nError: {{ $json.error || 'Unknown error' }}\\nTimestamp: {{ $now.toISO() }}\\n\\nPlease check the system logs."
+            }
+          ]
+        }
+      },
+      "id": "format-error-message",
+      "name": "Format Error Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1130, 480]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"text\": \"{{ $json.slack_message }}\" }",
+        "options": {}
+      },
+      "id": "notify-error",
+      "name": "Slack: Alert Failure",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1350, 480]
+    }
+  ],
+  "connections": {
+    "Schedule: Daily 2 AM": {
+      "main": [
+        [
+          {
+            "node": "Merge Triggers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger (Demo)": {
+      "main": [
+        [
+          {
+            "node": "Merge Triggers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Triggers": {
+      "main": [
+        [
+          {
+            "node": "Run Intelligence Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Intelligence Analysis": {
+      "main": [
+        [
+          {
+            "node": "Analysis Successful?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analysis Successful?": {
+      "main": [
+        [
+          {
+            "node": "Format Success Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Error Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Success Message": {
+      "main": [
+        [
+          {
+            "node": "Slack: Report Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Error Message": {
+      "main": [
+        [
+          {
+            "node": "Slack: Alert Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "intelligence",
+      "id": "scheduled-analysis"
+    },
+    {
+      "name": "opusflow",
+      "id": "opusflow-core"
+    }
+  ],
+  "pinData": {},
+  "versionId": "1"
+}

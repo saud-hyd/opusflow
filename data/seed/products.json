@@ -1,0 +1,242 @@
+[
+  {
+    "name": "Steel Tube DIN 2391",
+    "standard": "DIN 2391",
+    "specifications": "Seamless precision steel tube, cold drawn, diameter 25mm, wall thickness 2.5mm",
+    "in_stock": 1500,
+    "unit_price": 45.50,
+    "lead_time_days": 0
+  },
+  {
+    "name": "Steel Pipe DIN 2448",
+    "standard": "DIN 2448",
+    "specifications": "Welded steel pipe for general purposes, diameter 50mm, wall thickness 3mm",
+    "in_stock": 850,
+    "unit_price": 38.75,
+    "lead_time_days": 0
+  },
+  {
+    "name": "Steel Tube DIN 2391 Large",
+    "standard": "DIN 2391",
+    "specifications": "Seamless precision steel tube, cold drawn, diameter 40mm, wall thickness 4mm",
+    "in_stock": 0,
+    "unit_price": 62.00,
+    "lead_time_days": 14
+  },
+  {
+    "name": "Aluminum Profile 6082-T6",
+    "standard": "EN AW-6082-T6",
+    "specifications": "Extruded aluminum profile, structural grade, 50x50mm square section",
+    "in_stock": 2000,
+    "unit_price": 52.30,
+    "lead_time_days": 0
+  },
+  {
+    "name": "Aluminum Tube 6061",
+    "standard": "ASTM B210 6061-T6",
+    "specifications": "Round aluminum tube, diameter 30mm, wall thickness 3mm, T6 temper",
+    "in_stock": 1200,
+    "unit_price": 48.90,
+    "lead_time_days": 0
+  },
+  {
+    "name": "Brass Round Bar",
+    "standard": "CuZn39Pb3",
+    "specifications": "Free-cutting brass rod, diameter 20mm, length 3000mm",
+    "in_stock": 600,
+    "unit_price": 67.50,
+    "lead_time_days": 0
+  },
+  {
+    "name": "Steel Pipe DIN 2448 Heavy",
+    "standard": "DIN 2448",
+    "specifications": "Welded steel pipe, diameter 80mm, wall thickness 5mm, heavy duty",
+    "in_stock": 0,
+    "unit_price": 71.20,
+    "lead_time_days": 10
+  },
+  {
+    "name": "Aluminum Sheet 6082",
+    "standard": "EN AW-6082",
+    "specifications": "Aluminum sheet, 2000x1000mm, thickness 3mm, mill finish",
+    "in_stock": 450,
+    "unit_price": 76.80,
+    "lead_time_days": 0
+  },
+  {
+    "name": "Steel Tube DIN 2391 Small",
+    "standard": "DIN 2391",
+    "specifications": "Seamless precision steel tube, diameter 16mm, wall thickness 2mm",
+    "in_stock": 1800,
+    "unit_price": 34.50,
+    "lead_time_days": 0
+  },
+  {
+    "name": "Brass Tube",
+    "standard": "CuZn37",
+    "specifications": "Brass tube, diameter 25mm, wall thickness 2mm, half-hard temper",
+    "in_stock": 0,
+    "unit_price": 58.40,
+    "lead_time_days": 12
+  },
+  {
+    "name": "Aluminum Round Bar 6061",
+    "standard": "ASTM B211 6061-T6",
+    "specifications": "Aluminum round bar, diameter 40mm, T6 heat treated",
+    "in_stock": 950,
+    "unit_price": 55.20,
+    "lead_time_days": 0
+  },
+  {
+    "name": "Steel Pipe DIN 2448 Medium",
+    "standard": "DIN 2448",
+    "specifications": "Welded steel pipe, diameter 65mm, wall thickness 3.5mm",
+    "in_stock": 720,
+    "unit_price": 46.30,
+    "lead_time_days": 0
+  },
+  {
+    "name": "Aluminum Angle 6082",
+    "standard": "EN AW-6082-T6",
+    "specifications": "Extruded aluminum angle, 40x40x4mm, T6 temper",
+    "in_stock": 0,
+    "unit_price": 42.10,
+    "lead_time_days": 15
+  },
+  {
+    "name": "Brass Flat Bar",
+    "standard": "CuZn39Pb3",
+    "specifications": "Brass flat bar, 30x10mm cross section, 3000mm length",
+    "in_stock": 380,
+    "unit_price": 63.70,
+    "lead_time_days": 0
+  },
+  {
+    "name": "Steel Tube DIN 2391 XL",
+    "standard": "DIN 2391",
+    "specifications": "Seamless precision steel tube, diameter 60mm, wall thickness 5mm",
+    "in_stock": 0,
+    "unit_price": 79.90,
+    "lead_time_days": 18
+  },
+  {
+    "name": "Aluminum Plate 6061",
+    "standard": "ASTM B209 6061-T6",
+    "specifications": "Aluminum plate, 2000x1000mm, thickness 10mm, T6 condition",
+    "in_stock": 280,
+    "unit_price": 78.50,
+    "lead_time_days": 0
+  },
+  {
+    "name": "Steel Pipe DIN 2448 Light",
+    "standard": "DIN 2448",
+    "specifications": "Welded steel pipe, diameter 32mm, wall thickness 2.5mm",
+    "in_stock": 1350,
+    "unit_price": 32.80,
+    "lead_time_days": 0
+  },
+  {
+    "name": "Brass Wire",
+    "standard": "CuZn37",
+    "specifications": "Brass wire, diameter 3mm, soft annealed, coil 25kg",
+    "in_stock": 0,
+    "unit_price": 51.20,
+    "lead_time_days": 9
+  },
+  {
+    "name": "Aluminum Channel 6082",
+    "standard": "EN AW-6082-T6",
+    "specifications": "Extruded aluminum U-channel, 60x40x5mm, T6 temper",
+    "in_stock": 640,
+    "unit_price": 49.60,
+    "lead_time_days": 0
+  },
+  {
+    "name": "Steel Hollow Section",
+    "standard": "EN 10219",
+    "specifications": "Square hollow section, 50x50x3mm, structural steel S355",
+    "in_stock": 890,
+    "unit_price": 44.90,
+    "lead_time_days": 0
+  },
+  {
+    "name": "Aluminum Tube 6082",
+    "standard": "EN AW-6082-T6",
+    "specifications": "Square aluminum tube, 40x40x3mm, T6 heat treated",
+    "in_stock": 0,
+    "unit_price": 56.30,
+    "lead_time_days": 13
+  },
+  {
+    "name": "Brass Hexagonal Bar",
+    "standard": "CuZn39Pb3",
+    "specifications": "Brass hex bar, 15mm across flats, free-cutting grade",
+    "in_stock": 520,
+    "unit_price": 59.80,
+    "lead_time_days": 0
+  },
+  {
+    "name": "Steel Rectangular Tube",
+    "standard": "EN 10305-5",
+    "specifications": "Rectangular precision tube, 60x40x3mm, cold finished",
+    "in_stock": 0,
+    "unit_price": 53.40,
+    "lead_time_days": 16
+  },
+  {
+    "name": "Aluminum Flat Bar 6061",
+    "standard": "ASTM B221 6061-T6",
+    "specifications": "Aluminum flat bar, 50x10mm, T6 condition, 6000mm length",
+    "in_stock": 1100,
+    "unit_price": 41.70,
+    "lead_time_days": 0
+  },
+  {
+    "name": "Steel Round Bar",
+    "standard": "DIN 1013",
+    "specifications": "Round steel bar, diameter 30mm, grade S235JR, hot rolled",
+    "in_stock": 750,
+    "unit_price": 36.20,
+    "lead_time_days": 0
+  },
+  {
+    "name": "Brass Sheet",
+    "standard": "CuZn37",
+    "specifications": "Brass sheet, 1000x2000mm, thickness 1.5mm, half-hard",
+    "in_stock": 0,
+    "unit_price": 72.90,
+    "lead_time_days": 11
+  },
+  {
+    "name": "Aluminum T-Section 6082",
+    "standard": "EN AW-6082-T6",
+    "specifications": "Extruded aluminum T-profile, 50x50x5mm, T6 temper",
+    "in_stock": 430,
+    "unit_price": 47.30,
+    "lead_time_days": 0
+  },
+  {
+    "name": "Steel Pipe Large Diameter",
+    "standard": "API 5L Grade B",
+    "specifications": "Welded steel pipe, diameter 150mm, wall thickness 6mm, for pressure",
+    "in_stock": 0,
+    "unit_price": 74.60,
+    "lead_time_days": 21
+  },
+  {
+    "name": "Aluminum Round Tube 6061",
+    "standard": "ASTM B210 6061-T6",
+    "specifications": "Round aluminum tube, diameter 50mm, wall thickness 5mm",
+    "in_stock": 680,
+    "unit_price": 64.80,
+    "lead_time_days": 0
+  },
+  {
+    "name": "Brass Rod Special",
+    "standard": "CuZn40Pb2",
+    "specifications": "High-strength brass rod, diameter 25mm, excellent machinability",
+    "in_stock": 310,
+    "unit_price": 69.50,
+    "lead_time_days": 0
+  }
+]

@@ -1,0 +1,263 @@
+{
+  "name": "Email Router - Customer Orders",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "includeSpamTrash": false,
+          "labelIds": [],
+          "receivedAfter": ""
+        },
+        "format": "resolved",
+        "options": {
+          "attachmentsPrefix": "attachment_"
+        }
+      },
+      "id": "gmail-trigger",
+      "name": "Monitor Customer Emails",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "email_from",
+              "name": "from",
+              "type": "string",
+              "value": "={{ $json.from }}"
+            },
+            {
+              "id": "email_subject",
+              "name": "subject",
+              "type": "string",
+              "value": "={{ $json.subject }}"
+            },
+            {
+              "id": "email_body",
+              "name": "body",
+              "type": "string",
+              "value": "={{ $json.textPlain || $json.textHtml }}"
+            },
+            {
+              "id": "has_attachments",
+              "name": "has_attachments",
+              "type": "boolean",
+              "value": "={{ $json.attachments && $json.attachments.length > 0 }}"
+            },
+            {
+              "id": "received_at",
+              "name": "received_at",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-email",
+      "name": "Format Email Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.BACKEND_URL }}/api/webhook/email-received",
+        "authentication": "genericCredentialType",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "={{ $json.from }}"
+            },
+            {
+              "name": "subject",
+              "value": "={{ $json.subject }}"
+            },
+            {
+              "name": "body",
+              "value": "={{ $json.body }}"
+            },
+            {
+              "name": "has_attachments",
+              "value": "={{ $json.has_attachments }}"
+            },
+            {
+              "name": "received_at",
+              "value": "={{ $json.received_at }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "send-to-fastapi",
+      "name": "Send to FastAPI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [690, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "operation": "equals",
+              "value2": "processed"
+            }
+          ]
+        }
+      },
+      "id": "check-success",
+      "name": "Processing Success?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [910, 300]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "success_log",
+              "name": "log_message",
+              "type": "string",
+              "value": "✅ Email processed: Order {{ $json.order_id || 'created' }}"
+            },
+            {
+              "id": "timestamp",
+              "name": "processed_at",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      },
+      "id": "log-success",
+      "name": "Log Success",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1130, 200]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "error_log",
+              "name": "log_message",
+              "type": "string",
+              "value": "❌ Email processing failed"
+            },
+            {
+              "id": "timestamp",
+              "name": "processed_at",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      },
+      "id": "log-error",
+      "name": "Log Error",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1130, 400]
+    }
+  ],
+  "connections": {
+    "Monitor Customer Emails": {
+      "main": [
+        [
+          {
+            "node": "Format Email Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Email Data": {
+      "main": [
+        [
+          {
+            "node": "Send to FastAPI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to FastAPI": {
+      "main": [
+        [
+          {
+            "node": "Processing Success?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Processing Success?": {
+      "main": [
+        [
+          {
+            "node": "Log Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "email",
+      "id": "email-automation"
+    },
+    {
+      "name": "opusflow",
+      "id": "opusflow-core"
+    }
+  ],
+  "pinData": {},
+  "versionId": "1"
+}

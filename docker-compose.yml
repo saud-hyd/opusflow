@@ -1,0 +1,72 @@
+# Docker Compose configuration for OpusFlow AI
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: opusflow-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: opusflow
+      POSTGRES_USER: opusflow
+      POSTGRES_PASSWORD: opusflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - opusflow-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U opusflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  weaviate:
+    image: semitechnologies/weaviate:1.23.0
+    container_name: opusflow-weaviate
+    restart: always
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'text2vec-openai'
+      ENABLE_MODULES: 'text2vec-openai'
+      CLUSTER_HOSTNAME: 'node1'
+    ports:
+      - "8080:8080"
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    networks:
+      - opusflow-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/v1/.well-known/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: opusflow-n8n
+    restart: always
+    environment:
+      N8N_BASIC_AUTH_ACTIVE: 'false'
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      WEBHOOK_URL: http://localhost:5678/
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - opusflow-network
+
+networks:
+  opusflow-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  weaviate_data:
+  n8n_data:
