@@ -25,6 +25,19 @@ async def run_intelligence_analysis(time_range_days: int, db: Session) -> Dict[s
 
     deliveries = db.query(HistoricalDelivery).all()
 
+    def parse_date(date_str: Any):
+        if not date_str:
+            return None
+        try:
+            return datetime.strptime(str(date_str), "%Y-%m-%d")
+        except ValueError:
+            return None
+
+    deliveries = [
+        d for d in deliveries
+        if (parsed := parse_date(d.promised_date)) and parsed >= cutoff_date
+    ]
+
     # Convert to pandas DataFrame
     if len(deliveries) == 0:
         # No data - return empty analysis
@@ -70,7 +83,10 @@ async def run_intelligence_analysis(time_range_days: int, db: Session) -> Dict[s
 
     # Step 3: Material trends analysis
     # Get supplier offers to analyze materials
-    supplier_offers = db.query(SupplierOffer).all()
+    supplier_offers = [
+        offer for offer in db.query(SupplierOffer).all()
+        if offer.created_at and offer.created_at >= cutoff_date
+    ]
 
     material_data = []
     for offer in supplier_offers:

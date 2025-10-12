@@ -1,6 +1,7 @@
 # Weaviate vector database client configuration
 import os
 from typing import List, Dict, Any
+
 import weaviate
 from weaviate.classes.config import Configure, Property, DataType
 from weaviate.classes.query import Filter
@@ -14,7 +15,8 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Initialize client
 client = weaviate.connect_to_local(
-    host=WEAVIATE_URL.replace("http://", "").replace("https://", ""),
+    host="localhost",
+    port=8080,
     headers={"X-OpenAI-Api-Key": OPENAI_API_KEY}
 )
 
@@ -24,7 +26,6 @@ def init_collections():
     Create Product and Supplier collections with text2vec-openai vectorizer.
     """
     try:
-        # Create Product collection
         if not client.collections.exists("Product"):
             client.collections.create(
                 name="Product",
@@ -38,9 +39,8 @@ def init_collections():
                     Property(name="lead_time_days", data_type=DataType.INT),
                 ]
             )
-            print("✓ Product collection created")
+            print("[OK] Product collection created")
 
-        # Create Supplier collection
         if not client.collections.exists("Supplier"):
             client.collections.create(
                 name="Supplier",
@@ -53,7 +53,7 @@ def init_collections():
                     Property(name="negotiation_history", data_type=DataType.TEXT),
                 ]
             )
-            print("✓ Supplier collection created")
+            print("[OK] Supplier collection created")
 
         return {"status": "success", "message": "Collections initialized"}
 
@@ -75,7 +75,6 @@ def search_products(query: str, min_stock: int = 0) -> List[Dict[str, Any]]:
     try:
         products = client.collections.get("Product")
 
-        # Hybrid search with alpha=0.5 (balanced keyword + vector)
         response = products.query.hybrid(
             query=query,
             alpha=0.5,
@@ -114,12 +113,10 @@ def search_suppliers(product: str) -> List[Dict[str, Any]]:
     try:
         suppliers = client.collections.get("Supplier")
 
-        # Search suppliers that carry this product
         response = suppliers.query.hybrid(
             query=product,
             alpha=0.5,
-            limit=5,
-            filters=Filter.by_property("products").contains_any([product])
+            limit=5
         )
 
         results = []
@@ -152,7 +149,6 @@ def get_supplier_history(supplier_name: str) -> Dict[str, Any]:
     try:
         suppliers = client.collections.get("Supplier")
 
-        # Get supplier by exact name match
         response = suppliers.query.fetch_objects(
             limit=1,
             filters=Filter.by_property("name").equal(supplier_name)

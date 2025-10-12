@@ -16,7 +16,10 @@
       "name": "Schedule: Daily 2 AM",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1,
-      "position": [250, 300]
+      "position": [
+        250,
+        300
+      ]
     },
     {
       "parameters": {},
@@ -24,7 +27,10 @@
       "name": "Manual Trigger (Demo)",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [250, 460]
+      "position": [
+        250,
+        460
+      ]
     },
     {
       "parameters": {
@@ -51,12 +57,15 @@
       "name": "Merge Triggers",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3,
-      "position": [470, 380]
+      "position": [
+        470,
+        380
+      ]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.BACKEND_URL }}/api/run-intelligence",
+        "url": "http://host.docker.internal:8000/api/run-intelligence",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={ \"time_range_days\": 180 }",
@@ -68,7 +77,23 @@
       "name": "Run Intelligence Analysis",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [690, 380]
+      "position": [
+        690,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const data = { ...$json };\nconst getTop = (arr = [], fallback) => Array.isArray(arr) && arr.length ? arr[0] : fallback;\nconst defaultRisk = { title: 'No critical risks', description: '' };\nconst defaultOpp = { title: 'No opportunities', description: '' };\ndata.top_risk = getTop(data.critical_risks, defaultRisk);\ndata.top_opportunity = getTop(data.cost_opportunities, defaultOpp);\ndata.generated_at = data.generated_at || new Date().toISOString();\nreturn [data];"
+      },
+      "id": "enrich-results",
+      "name": "Enrich Results",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        940,
+        300
+      ]
     },
     {
       "parameters": {
@@ -85,7 +110,10 @@
       "name": "Analysis Successful?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
-      "position": [910, 380]
+      "position": [
+        910,
+        380
+      ]
     },
     {
       "parameters": {
@@ -97,7 +125,19 @@
               "id": "slack_message",
               "name": "slack_message",
               "type": "string",
-              "value": "🧠 *Daily Intelligence Report*\\n\\n📊 *Summary*\\n• Critical Risks: {{ $json.critical_risks.length }}\\n• Cost Opportunities: {{ $json.cost_opportunities.length }}\\n• Suppliers Analyzed: {{ $json.supplier_rankings.length }}\\n\\n🚨 *Top Risk*\\n{{ $json.critical_risks[0]?.title || 'No critical risks' }}\\n{{ $json.critical_risks[0]?.description || '' }}\\n\\n💡 *Top Opportunity*\\n{{ $json.cost_opportunities[0]?.title || 'No opportunities found' }}\\n{{ $json.cost_opportunities[0]?.description || '' }}\\n\\n📈 View detailed report in dashboard\\n_Generated at {{ $json.generated_at }}_"
+              "value": "\ud83e\udde0 *Daily Intelligence Report*\\n\\n\ud83d\udcca *Summary*\\n\u2022 Critical Risks: {{ $json.critical_risks.length }}\\n\u2022 Cost Opportunities: {{ $json.cost_opportunities.length }}\\n\u2022 Suppliers Analyzed: {{ $json.supplier_rankings.length }}\\n\\n\ud83d\udea8 *Top Risk*\\n{{ $json.critical_risks[0]?.title || 'No critical risks' }}\\n{{ $json.critical_risks[0]?.description || '' }}\\n\\n\ud83d\udca1 *Top Opportunity*\\n{{ $json.cost_opportunities[0]?.title || 'No opportunities found' }}\\n{{ $json.cost_opportunities[0]?.description || '' }}\\n\\n\ud83d\udcc8 View detailed report in dashboard\\n_Generated at {{ $json.generated_at }}_"
+            },
+            {
+              "id": "email_subject",
+              "name": "email_subject",
+              "type": "string",
+              "value": "Intelligence Update - {{ $json.generated_at }}"
+            },
+            {
+              "id": "email_body",
+              "name": "email_body",
+              "type": "string",
+              "value": "Daily intelligence summary:\\nTop Risk: {{ $json.top_risk.title }}\\nTop Opportunity: {{ $json.top_opportunity.title }}\\nTotal Risks: {{ $json.critical_risks.length }}\\nTotal Opportunities: {{ $json.cost_opportunities.length }}"
             }
           ]
         }
@@ -106,22 +146,32 @@
       "name": "Format Success Message",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3,
-      "position": [1130, 280]
+      "position": [
+        1130,
+        280
+      ]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "url": "https://hooks.slack.com/demo",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={ \"text\": \"{{ $json.slack_message }}\" }",
-        "options": {}
+        "options": {
+          "retryOnFail": true,
+          "maxRetries": 2
+        }
       },
       "id": "notify-success",
       "name": "Slack: Report Ready",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [1350, 280]
+      "position": [
+        1350,
+        280
+      ],
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -133,7 +183,7 @@
               "id": "error_message",
               "name": "slack_message",
               "type": "string",
-              "value": "⚠️ *Intelligence Analysis Failed*\\n\\nThe daily intelligence report could not be generated.\\n\\nError: {{ $json.error || 'Unknown error' }}\\nTimestamp: {{ $now.toISO() }}\\n\\nPlease check the system logs."
+              "value": "\u26a0\ufe0f *Intelligence Analysis Failed*\\n\\nThe daily intelligence report could not be generated.\\n\\nError: {{ $json.error || 'Unknown error' }}\\nTimestamp: {{ $now.toISO() }}\\n\\nPlease check the system logs."
             }
           ]
         }
@@ -142,22 +192,85 @@
       "name": "Format Error Message",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3,
-      "position": [1130, 480]
+      "position": [
+        1130,
+        480
+      ]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "url": "https://hooks.slack.com/demo",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={ \"text\": \"{{ $json.slack_message }}\" }",
-        "options": {}
+        "options": {
+          "retryOnFail": true,
+          "maxRetries": 2
+        }
       },
       "id": "notify-error",
       "name": "Slack: Alert Failure",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [1350, 480]
+      "position": [
+        1350,
+        480
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "email": "leaders@opusflow.ai",
+        "subject": "={{ $json.email_subject }}",
+        "message": "={{ $json.email_body }}",
+        "options": {}
+      },
+      "id": "intel-email",
+      "name": "Email: Strategy",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        1380,
+        420
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "log_message",
+              "name": "log_message",
+              "type": "string",
+              "value": "Intelligence run completed at {{ $json.generated_at }}"
+            },
+            {
+              "id": "log_time",
+              "name": "logged_at",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      },
+      "id": "intel-log",
+      "name": "Log Intelligence Run",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        320
+      ]
     }
   ],
   "connections": {
@@ -198,7 +311,7 @@
       "main": [
         [
           {
-            "node": "Analysis Successful?",
+            "node": "Enrich Results",
             "type": "main",
             "index": 0
           }
@@ -230,6 +343,16 @@
             "node": "Slack: Report Ready",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Email: Strategy",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log Intelligence Run",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -239,6 +362,17 @@
         [
           {
             "node": "Slack: Alert Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrich Results": {
+      "main": [
+        [
+          {
+            "node": "Analysis Successful?",
             "type": "main",
             "index": 0
           }

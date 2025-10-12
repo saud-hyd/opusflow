@@ -62,14 +62,38 @@
               "type": "boolean",
               "value": "={{ $json.attachments && $json.attachments.length > 0 }}"
             },
-            {
-              "id": "received_at",
-              "name": "received_at",
-              "type": "string",
-              "value": "={{ $now.toISO() }}"
-            }
-          ]
+        {
+          "id": "received_at",
+          "name": "received_at",
+          "type": "string",
+          "value": "={{ $now.toISO() }}"
         },
+        {
+          "id": "message_id",
+          "name": "message_id",
+          "type": "string",
+          "value": "={{ $json.id || $json.messageId }}"
+        },
+        {
+          "id": "thread_id",
+          "name": "thread_id",
+          "type": "string",
+          "value": "={{ $json.threadId || '' }}"
+        },
+        {
+          "id": "normalized_subject",
+          "name": "normalized_subject",
+          "type": "string",
+          "value": "={{ $json.subject || 'No subject' }}"
+        },
+        {
+          "id": "snippet",
+          "name": "snippet",
+          "type": "string",
+          "value": "={{ $json.snippet || ($json.textPlain && $json.textPlain.slice(0,140)) || '' }}"
+        }
+      ]
+    },
         "options": {}
       },
       "id": "format-email",
@@ -81,7 +105,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.BACKEND_URL }}/api/webhook/email-received",
+        "url": "http://host.docker.internal:8000/api/webhook/email-received",
         "authentication": "genericCredentialType",
         "sendBody": true,
         "bodyParameters": {
@@ -102,21 +126,84 @@
               "name": "has_attachments",
               "value": "={{ $json.has_attachments }}"
             },
-            {
-              "name": "received_at",
-              "value": "={{ $json.received_at }}"
-            }
-          ]
+        {
+          "name": "received_at",
+          "value": "={{ $json.received_at }}"
         },
-        "options": {
-          "timeout": 10000
+        {
+          "name": "message_id",
+          "value": "={{ $json.message_id || $json.messageId || $json.id }}"
+        },
+        {
+          "name": "thread_id",
+          "value": "={{ $json.thread_id }}"
+        },
+        {
+          "name": "normalized_subject",
+          "value": "={{ $json.normalized_subject }}"
+        },
+        {
+          "name": "snippet",
+          "value": "={{ $json.snippet }}"
         }
+      ]
+    },
+    "options": {
+      "timeout": 10000,
+      "retryOnFail": true,
+      "maxRetries": 2
+    }
       },
       "id": "send-to-fastapi",
       "name": "Send to FastAPI",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [690, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "operation": "equals",
+              "value2": "duplicate"
+            }
+          ]
+        }
+      },
+      "id": "duplicate-check",
+      "name": "Duplicate Email?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [910, 200]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dup_log",
+              "name": "log_message",
+              "type": "string",
+              "value": "Duplicate email ignored ({{ $json.message_id ? $json.message_id : ($json.id ? $json.id : 'no-id') }})"
+            },
+            {
+              "id": "dup_time",
+              "name": "processed_at",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      },
+      "id": "duplicate-log",
+      "name": "Log Duplicate",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1130, 120]
     },
     {
       "parameters": {
@@ -146,7 +233,7 @@
               "id": "success_log",
               "name": "log_message",
               "type": "string",
-              "value": "✅ Email processed: Order {{ $json.order_id || 'created' }}"
+              "value": "Email processed: Order {{ $json.order_id || 'created' }} ({{ $json.intent || 'unknown' }})"
             },
             {
               "id": "timestamp",
@@ -173,7 +260,7 @@
               "id": "error_log",
               "name": "log_message",
               "type": "string",
-              "value": "❌ Email processing failed"
+              "value": "Email processing failed: {{ $json.detail || $json.message || 'unknown error' }}"
             },
             {
               "id": "timestamp",
@@ -216,6 +303,24 @@
     },
     "Send to FastAPI": {
       "main": [
+        [
+          {
+            "node": "Duplicate Email?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Duplicate Email?": {
+      "main": [
+        [
+          {
+            "node": "Log Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "Processing Success?",

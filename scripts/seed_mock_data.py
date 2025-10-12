@@ -20,17 +20,17 @@ def main():
 
     # Load environment variables
     load_dotenv()
-    print("✓ Environment variables loaded")
+    print("[OK] Environment variables loaded")
 
     # Database connection
     DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://opusflow:opusflow@localhost:5432/opusflow")
-    print(f"✓ Connecting to database...")
+    print(f"[OK] Connecting to database...")
 
     try:
         engine = create_engine(DATABASE_URL)
-        print("✓ Database connection established")
+        print("[OK] Database connection established")
     except Exception as e:
-        print(f"❌ Failed to connect to database: {str(e)}")
+        print(f"[ERROR] Failed to connect to database: {str(e)}")
         sys.exit(1)
 
     # Generate historical delivery data
@@ -93,7 +93,7 @@ def main():
     # Convert to DataFrame
     df = pd.DataFrame(delivery_records)
 
-    print(f"✓ Generated {len(df)} delivery records")
+    print(f"[OK] Generated {len(df)} delivery records")
     print(f"\nDistribution by supplier:")
     print(df['supplier_name'].value_counts())
 
@@ -107,10 +107,10 @@ def main():
             index=False,
             method='multi'
         )
-        print(f"✅ Inserted {len(df)} records successfully")
+        print(f"[SUCCESS] Inserted {len(df)} records successfully")
 
     except Exception as e:
-        print(f"❌ Failed to insert records: {str(e)}")
+        print(f"[ERROR] Failed to insert records: {str(e)}")
         sys.exit(1)
 
     # Summary statistics
@@ -133,7 +133,7 @@ def main():
             print(f"  Avg quality: {avg_quality:.1f}/10")
 
     print("\n" + "=" * 50)
-    print("✅ Mock data seeding completed successfully!")
+    print("[SUCCESS] Mock data seeding completed successfully!")
     print("=" * 50)
 
 if __name__ == "__main__":

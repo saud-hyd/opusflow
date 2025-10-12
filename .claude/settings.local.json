@@ -2,7 +2,19 @@
   "permissions": {
     "allow": [
       "Bash(mkdir:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker compose:*)",
+      "Bash(python:*)",
+      "Bash(docker:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(docker-compose:*)",
+      "Bash(set DATABASE_URL=postgresql://opusflow:opusflow@127.0.0.1:5432/opusflow)",
+      "Bash(pip install:*)",
+      "Bash(set PYTHONPATH=C:opusflow-ai)",
+      "Bash(streamlit run:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

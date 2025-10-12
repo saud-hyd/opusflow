@@ -9,11 +9,19 @@ import requests
 from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
 
+# Page config MUST be first Streamlit command
+st.set_page_config(
+    page_title="OpusFlow AI Dashboard",
+    page_icon="📊",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 load_dotenv()
 
 # Configuration
 API_BASE_URL = "http://localhost:8000"
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://opusflow:opusflow@localhost:5432/opusflow")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/postgres")
 
 # Database connection
 @st.cache_resource
@@ -22,15 +30,6 @@ def get_db_engine():
     return create_engine(DATABASE_URL)
 
 engine = get_db_engine()
-
-
-# Page config
-st.set_page_config(
-    page_title="OpusFlow AI Dashboard",
-    page_icon="🏭",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
 
 # Title
 st.title("🏭 OpusFlow AI - Manufacturing Operations")

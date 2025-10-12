@@ -9,13 +9,13 @@ from pydantic import BaseModel, Field
 class OrderRequirements(BaseModel):
     """Customer order requirements input"""
     product_type: str
-    standard: str
     quantity: int
-    specifications: Dict[str, Any]
-    delivery_date: str
-    delivery_location: str
     customer_email: str
-    customer_company: str
+    standard: Optional[str] = None
+    specifications: Dict[str, Any] = Field(default_factory=dict)
+    delivery_date: Optional[str] = None
+    delivery_location: Optional[str] = None
+    customer_company: Optional[str] = None
 
 
 class SupplierOfferModel(BaseModel):
@@ -43,10 +43,16 @@ class OrderResponse(BaseModel):
     """Order creation response"""
     order_id: str
     status: str
-    total: float
-    estimated_delivery: str
-    message: str
     source: str
+    total: float = 0.0
+    estimated_delivery: Optional[str] = None
+    message: Optional[str] = None
+    customer_company: Optional[str] = None
+    customer_email: Optional[str] = None
+    delivery_location: Optional[str] = None
+    items: List[Dict[str, Any]] = Field(default_factory=list)
+    supplier_offers: Optional[List[Dict[str, Any]]] = None
+    next_step: Optional[str] = None
 
 
 class NegotiationResponse(BaseModel):

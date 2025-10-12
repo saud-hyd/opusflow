@@ -95,6 +95,18 @@ class IntelligenceReport(Base):
     generated_at = Column(DateTime, default=datetime.utcnow)
 
 
+class EmailLog(Base):
+    """Inbound email processing log"""
+    __tablename__ = "email_logs"
+
+    log_id = Column(Integer, primary_key=True, autoincrement=True)
+    message_id = Column(String, index=True, unique=True, nullable=True)
+    intent = Column(String)
+    status = Column(String, default='received')
+    payload = Column(JSON)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 # Database initialization
 def init_db():
     """Create all tables in the database"""

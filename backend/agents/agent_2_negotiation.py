@@ -7,9 +7,10 @@ from sqlalchemy.orm import Session
 
 from langgraph.graph import StateGraph, END
 from backend.models import NegotiationRequest, NegotiationResponse
-from backend.database import Negotiation, PurchaseOrder
+from backend.database import Negotiation, PurchaseOrder, Order
 from backend.clients.openai_client import generate_negotiation_counter
 from backend.clients.weaviate_client import get_supplier_history
+from backend.config import DEFAULT_DISCOUNT_RATE, LEAD_TIME_REDUCTION_DAYS, NEGOTIATION_ACCEPT_THRESHOLD, NEGOTIATION_REJECT_THRESHOLD
 
 
 # Define state
@@ -51,10 +52,10 @@ def evaluate_node(state: NegotiationState) -> NegotiationState:
     # Overall score (weighted average)
     overall_score = int((price_score * 0.5 + lead_time_score * 0.3 + moq_score * 0.2))
 
-    # Make decision
-    if overall_score > 85:
+    # Make decision using config thresholds
+    if overall_score > NEGOTIATION_ACCEPT_THRESHOLD:
         decision = "accept"
-    elif overall_score >= 60:
+    elif overall_score >= NEGOTIATION_REJECT_THRESHOLD:
         decision = "negotiate"
     else:
         decision = "reject"
@@ -122,36 +123,48 @@ def generate_counter_node(state: NegotiationState) -> NegotiationState:
         supplier_history=supplier_history
     )
 
+    # Send counter-offer email to supplier
+    from backend.clients.email_client import send_negotiation_email
+
+    supplier_email = current_offer.get("supplier_email", f"procurement@{supplier.lower().replace(' ', '')}.com")
+    email_sent = send_negotiation_email(
+        to_email=supplier_email,
+        subject=f"Re: Quotation - OpusFlow Partnership Opportunity",
+        body=counter_email,
+        metadata={
+            "session_id": state["session_id"],
+            "round": len(state["rounds"]) + 1
+        }
+    )
+
     # Add round to history
     round_data = {
         "round": len(state["rounds"]) + 1,
         "type": "counter_offer",
         "message": counter_email,
         "levers_used": state.get("levers", []),
+        "email_sent": email_sent,
         "timestamp": datetime.utcnow().isoformat()
     }
     state["rounds"].append(round_data)
 
-    # DEMO: Simulate supplier response (accept with small concession)
-    # In production, this would wait for actual email response
-    improved_offer = current_offer.copy()
-    improved_offer["unit_price"] = current_offer["unit_price"] * 0.92  # 8% discount
-    improved_offer["lead_time_days"] = max(constraints.get("max_lead_time", 30), current_offer.get("lead_time_days", 30) - 5)
+    # DEMO MODE: Auto-simulate supplier response if email sending is disabled
+    # In production with real emails, this would wait for actual supplier response via webhook
+    if not email_sent or True:  # Keep simulation active for demo
+        improved_offer = current_offer.copy()
+        improved_offer["unit_price"] = current_offer["unit_price"] * (1 - DEFAULT_DISCOUNT_RATE)
+        improved_offer["lead_time_days"] = max(constraints.get("max_lead_time", 30), current_offer.get("lead_time_days", 30) - LEAD_TIME_REDUCTION_DAYS)
 
-    supplier_response = {
-        "round": len(state["rounds"]) + 1,
-        "type": "supplier_response",
-        "message": f"We appreciate your partnership proposal. We can offer ${improved_offer['unit_price']:.2f} per unit with {improved_offer['lead_time_days']} days lead time for a 12-month commitment.",
-        "updated_offer": improved_offer,
-        "timestamp": datetime.utcnow().isoformat()
-    }
-    state["rounds"].append(supplier_response)
-
-    # Update current offer
-    state["current_offer"] = improved_offer
-
-    # Re-evaluate after supplier response
-    state = evaluate_node(state)
+        supplier_response = {
+            "round": len(state["rounds"]) + 1,
+            "type": "supplier_response_simulated",
+            "message": f"We appreciate your partnership proposal. We can offer ${improved_offer['unit_price']:.2f} per unit with {improved_offer['lead_time_days']} days lead time for a 12-month commitment.",
+            "updated_offer": improved_offer,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        state["rounds"].append(supplier_response)
+        state["current_offer"] = improved_offer
+        state = evaluate_node(state)
 
     return state
 
@@ -304,9 +317,54 @@ async def negotiate_with_supplier(request: NegotiationRequest, db: Session) -> D
     db.add(negotiation)
 
     # If accepted, create Purchase Order
+    order_payload = None
+
     if status == "completed":
         po_id = f"PO-2025-{random_chars}"
         final_terms = final_state["final_terms"]
+        final_terms["po_id"] = po_id
+
+        # Update linked customer order if it exists
+        order_record = db.query(Order).filter(Order.order_id == request.customer_order_id).first()
+        items_payload = [{
+            "supplier": final_terms.get("supplier"),
+            "quantity": final_terms.get("quantity"),
+            "unit_price": final_terms.get("unit_price"),
+            "total": final_terms.get("total_price")
+        }]
+
+        customer_company = "External Supplier"
+        customer_email = None
+        if order_record:
+            customer_company = order_record.customer_company or customer_company
+            customer_email = order_record.customer_email
+
+            existing_items = order_record.items if isinstance(order_record.items, list) else []
+            if existing_items:
+                existing_items[0]["supplier"] = final_terms.get("supplier")
+                existing_items[0]["unit_price"] = final_terms.get("unit_price")
+                existing_items[0]["total"] = final_terms.get("total_price")
+                items_payload = existing_items
+
+            order_record.items = items_payload
+            order_record.total = final_terms.get("total_price", 0)
+            order_record.status = "confirmed"
+            order_record.source = "external"
+            order_record.delivery_date = f"{final_terms.get('lead_time_days', 0)} days"
+
+        order_payload = {
+            "order_id": request.customer_order_id,
+            "customer_company": customer_company,
+            "customer_email": customer_email,
+            "total": final_terms.get("total_price", 0),
+            "delivery_date": f"{final_terms.get('lead_time_days', 0)} days",
+            "delivery_location": "TBD",
+            "source": "external",
+            "items": items_payload,
+            "supplier": final_terms.get("supplier"),
+            "supplier_po_id": po_id,
+            "payment_terms": final_terms.get("payment_terms", "Net 30"),
+        }
 
         purchase_order = PurchaseOrder(
             po_id=po_id,
@@ -331,4 +389,5 @@ async def negotiate_with_supplier(request: NegotiationRequest, db: Session) -> D
         "final_terms": final_state.get("final_terms"),
         "savings": final_state.get("savings", 0.0),
         "rounds": len(final_state.get("rounds", [])),
+        "order_payload": order_payload,
     }

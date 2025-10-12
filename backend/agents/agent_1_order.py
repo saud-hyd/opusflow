@@ -2,13 +2,14 @@
 import random
 import string
 from datetime import datetime
-from typing import Dict, Any
+from typing import Dict, Any, List
 from sqlalchemy.orm import Session
 
 from backend.models import OrderRequirements, OrderResponse
 from backend.database import Order
 from backend.clients.weaviate_client import search_products, search_suppliers
 from backend.clients.openai_client import generate_order_confirmation
+from backend.config import CUSTOMER_MARKUP_PERCENT, VAT_RATE
 
 
 async def process_order(requirements: OrderRequirements, db: Session) -> Dict[str, Any]:
@@ -28,7 +29,10 @@ async def process_order(requirements: OrderRequirements, db: Session) -> Dict[st
     order_id = f"ORD-2025-{random_chars}"
 
     # Step 2: Search Weaviate for products matching requirements
-    query = f"{requirements.product_type} {requirements.standard}"
+    query_parts: List[str] = [requirements.product_type]
+    if requirements.standard:
+        query_parts.append(str(requirements.standard))
+    query = " ".join(query_parts)
     products = search_products(query, min_stock=0)
 
     # Check if we have products and stock
@@ -42,28 +46,29 @@ async def process_order(requirements: OrderRequirements, db: Session) -> Dict[st
     if in_stock_product:
         source = "internal"
 
-        # Calculate price with 20% markup
+        # Calculate price with markup from config
         cost = in_stock_product.get("unit_price", 0)
-        unit_price = cost * 1.20
+        unit_price = cost * (1 + CUSTOMER_MARKUP_PERCENT)
 
         # Step 6: Calculate pricing
         subtotal = unit_price * requirements.quantity
-        vat = subtotal * 0.19  # 19% VAT
+        vat = subtotal * VAT_RATE
         total = subtotal + vat
 
         # Step 7: Generate confirmation using OpenAI
         order_data = {
             "order_id": order_id,
-            "customer_company": requirements.customer_company,
+            "customer_company": requirements.customer_company or "Unknown Company",
+            "customer_email": requirements.customer_email,
             "items": [{
                 "product": requirements.product_type,
-                "standard": requirements.standard,
+                "standard": requirements.standard or "N/A",
                 "quantity": requirements.quantity,
                 "unit_price": unit_price,
             }],
             "total": total,
-            "delivery_date": requirements.delivery_date,
-            "delivery_location": requirements.delivery_location,
+            "delivery_date": requirements.delivery_date or "TBD",
+            "delivery_location": requirements.delivery_location or "Not provided",
         }
 
         confirmation_email = generate_order_confirmation(order_data)
@@ -75,9 +80,9 @@ async def process_order(requirements: OrderRequirements, db: Session) -> Dict[st
             customer_company=requirements.customer_company,
             items=[{
                 "product_type": requirements.product_type,
-                "standard": requirements.standard,
+                "standard": requirements.standard or "N/A",
                 "quantity": requirements.quantity,
-                "specifications": requirements.specifications,
+                "specifications": requirements.specifications or {},
             }],
             total=total,
             delivery_date=requirements.delivery_date,
@@ -93,10 +98,15 @@ async def process_order(requirements: OrderRequirements, db: Session) -> Dict[st
         return {
             "order_id": order_id,
             "status": "confirmed",
+            "source": source,
             "total": total,
             "estimated_delivery": requirements.delivery_date,
             "message": confirmation_email,
-            "source": source,
+            "customer_company": requirements.customer_company or "Unknown Company",
+            "customer_email": requirements.customer_email,
+            "delivery_location": requirements.delivery_location or "Not provided",
+            "delivery_date": requirements.delivery_date,
+            "items": order_data["items"],
         }
 
     # Step 4: Not in stock - external fulfillment
@@ -129,9 +139,9 @@ async def process_order(requirements: OrderRequirements, db: Session) -> Dict[st
         customer_company=requirements.customer_company,
         items=[{
             "product_type": requirements.product_type,
-            "standard": requirements.standard,
+            "standard": requirements.standard or "N/A",
             "quantity": requirements.quantity,
-            "specifications": requirements.specifications,
+            "specifications": requirements.specifications or {},
         }],
         total=0.0,  # Will be calculated after negotiation
         delivery_date=requirements.delivery_date,
@@ -147,10 +157,20 @@ async def process_order(requirements: OrderRequirements, db: Session) -> Dict[st
     return {
         "order_id": order_id,
         "status": "pending_negotiation",
+        "source": source,
         "total": 0.0,
         "estimated_delivery": requirements.delivery_date,
         "message": f"Order requires external sourcing. {len(estimated_offers)} supplier offers generated.",
-        "source": source,
+        "customer_company": requirements.customer_company or "Unknown Company",
+        "customer_email": requirements.customer_email,
+        "delivery_location": requirements.delivery_location or "Not provided",
+        "delivery_date": requirements.delivery_date,
+        "items": [{
+            "product": requirements.product_type,
+            "standard": requirements.standard or "N/A",
+            "quantity": requirements.quantity,
+            "specifications": requirements.specifications or {},
+        }],
         "supplier_offers": estimated_offers,
         "next_step": "Agent 2 will handle negotiation",
     }

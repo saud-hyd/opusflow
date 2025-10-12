@@ -17,15 +17,15 @@ def main():
 
     # Load environment variables
     load_dotenv()
-    print("✓ Environment variables loaded")
+    print("[OK] Environment variables loaded")
 
     # Initialize collections
     print("\nInitializing Weaviate collections...")
     try:
         result = init_collections()
-        print(f"✓ Collections initialized: {result.get('status')}")
+        print(f"[OK] Collections initialized: {result.get('status')}")
     except Exception as e:
-        print(f"❌ Failed to initialize collections: {str(e)}")
+        print(f"[ERROR] Failed to initialize collections: {str(e)}")
         sys.exit(1)
 
     # Load and insert products
@@ -34,7 +34,7 @@ def main():
         with open('data/seed/products.json', 'r') as f:
             products = json.load(f)
 
-        print(f"✓ Loaded {len(products)} products")
+        print(f"[OK] Loaded {len(products)} products")
 
         # Get Product collection
         product_collection = client.collections.get("Product")
@@ -53,13 +53,13 @@ def main():
                 }
             )
 
-        print(f"✅ Inserted {len(products)} products")
+        print(f"[SUCCESS] Inserted {len(products)} products")
 
     except FileNotFoundError:
-        print("❌ products.json not found in data/seed/")
+        print("[ERROR] products.json not found in data/seed/")
         sys.exit(1)
     except Exception as e:
-        print(f"❌ Failed to insert products: {str(e)}")
+        print(f"[ERROR] Failed to insert products: {str(e)}")
         sys.exit(1)
 
     # Load and insert suppliers
@@ -68,7 +68,7 @@ def main():
         with open('data/seed/suppliers.json', 'r') as f:
             suppliers = json.load(f)
 
-        print(f"✓ Loaded {len(suppliers)} suppliers")
+        print(f"[OK] Loaded {len(suppliers)} suppliers")
 
         # Get Supplier collection
         supplier_collection = client.collections.get("Supplier")
@@ -86,18 +86,18 @@ def main():
                 }
             )
 
-        print(f"✅ Inserted {len(suppliers)} suppliers")
+        print(f"[SUCCESS] Inserted {len(suppliers)} suppliers")
 
     except FileNotFoundError:
-        print("❌ suppliers.json not found in data/seed/")
+        print("[ERROR] suppliers.json not found in data/seed/")
         sys.exit(1)
     except Exception as e:
-        print(f"❌ Failed to insert suppliers: {str(e)}")
+        print(f"[ERROR] Failed to insert suppliers: {str(e)}")
         sys.exit(1)
 
     # Summary
     print("\n" + "=" * 50)
-    print("✅ Weaviate seeding completed successfully!")
+    print("[SUCCESS] Weaviate seeding completed successfully!")
     print(f"   Products: {len(products)}")
     print(f"   Suppliers: {len(suppliers)}")
     print("=" * 50)

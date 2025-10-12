@@ -16,13 +16,13 @@ def main():
 
     # Load environment variables
     load_dotenv()
-    print("✓ Environment variables loaded")
+    print("[OK] Environment variables loaded")
 
     # Initialize database
     print("\nCreating database tables...")
     try:
         init_db()
-        print("\n✅ Database setup completed successfully!")
+        print("\n[SUCCESS] Database setup completed successfully!")
         print("\nTables created:")
         print("  - orders")
         print("  - supplier_offers")
@@ -31,7 +31,7 @@ def main():
         print("  - historical_deliveries")
         print("  - intelligence_reports")
     except Exception as e:
-        print(f"\n❌ Database setup failed: {str(e)}")
+        print(f"\n[ERROR] Database setup failed: {str(e)}")
         sys.exit(1)
 
 if __name__ == "__main__":
